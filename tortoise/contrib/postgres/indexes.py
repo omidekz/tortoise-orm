@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 from pypika.terms import Term, ValueWrapper
 
-from tortoise.indexes import PartialIndex
+from tortoise.indexes import PartialIndex, Index
 
 
 class PostgreSQLIndex(PartialIndex):
@@ -49,3 +49,18 @@ class HashIndex(PostgreSQLIndex):
 
 class SpGistIndex(PostgreSQLIndex):
     INDEX_TYPE = "SPGIST"
+
+
+class UniqueIndex(Index):
+    INDEX_TYPE = "unique"
+
+    def __init__(
+        self,
+        *expressions: Term,
+        fields: Optional[Tuple[str]] = None,
+        name: Optional[str] = None,
+        nulls_not_distinct: Optional[bool] = None,
+    ):
+        super().__init__(*expressions, fields=fields, name=name)
+        if nulls_not_distinct:
+            self.extra += " nulls not distinct"
