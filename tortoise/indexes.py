@@ -1,3 +1,4 @@
+import abc
 from typing import TYPE_CHECKING, Optional, Tuple, Type, Generic, TypeVar
 
 
@@ -80,7 +81,7 @@ class PartialIndex(Index):
 T = TypeVar("T")
 
 
-class UniqueIndexABC(Index, Generic[T]):
+class UniqueIndexABC(Index, abc.ABC, Generic[T]):
     """
     T type is used for nulls type arg beyond extends
     """
@@ -98,8 +99,5 @@ class UniqueIndexABC(Index, Generic[T]):
         if nulls is not None:
             self.extra += f" {self.nulls(nulls)}"
 
-    def nulls(self, distinct: T):
-        raise NullsNotHandledInUniqueIndex
-
-
-class NullsNotHandledInUniqueIndex(NotImplementedError): ...
+    @abc.abstractmethod
+    def nulls(cls, distinct: T): ...
