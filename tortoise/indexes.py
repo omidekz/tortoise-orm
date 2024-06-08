@@ -1,5 +1,5 @@
 import abc
-from typing import TYPE_CHECKING, Optional, Tuple, Type, Generic, TypeVar
+from typing import TYPE_CHECKING, Optional, Tuple, Generic, TypeVar
 
 
 from pypika.terms import Term, ValueWrapper
@@ -100,4 +100,5 @@ class UniqueIndexABC(Index, abc.ABC, Generic[T]):
             self.extra += f" {self.nulls(nulls)}"
 
     @abc.abstractmethod
-    def nulls(cls, distinct: T): ...
+    def nulls(self, distinct: T):
+        raise NotImplementedError(self, distinct, 'no handler found')
