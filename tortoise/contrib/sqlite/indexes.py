@@ -2,7 +2,7 @@ from typing import Sequence
 from tortoise.indexes import UniqueIndexABC
 
 
-class UniqueIndex(UniqueIndexABC[Sequence[str]]):
+class SqliteUniqueIndex(UniqueIndexABC[Sequence[str]]):
 
     @staticmethod
     def get_conditions(fields: Sequence[str]):

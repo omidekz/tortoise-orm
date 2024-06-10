@@ -51,7 +51,7 @@ class SpGistIndex(PostgreSQLIndex):
     INDEX_TYPE = "SPGIST"
 
 
-class UniqueIndex(UniqueIndexABC[Literal["distinct", "not distinct"]]):
+class PostgresUniqueIndex(UniqueIndexABC[Literal["distinct", "not distinct"]]):
     @staticmethod
     def _nulls(distinct_status: Literal["distinct", "not distinct"]):
         return f"nulls {distinct_status}"
