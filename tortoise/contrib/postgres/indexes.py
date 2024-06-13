@@ -1,9 +1,9 @@
-from typing import Optional, Tuple, Literal, Type
+from typing import Optional, Tuple
 
 from pypika.terms import Term, ValueWrapper
 
 from tortoise.backends.base.schema_generator import BaseSchemaGenerator
-from tortoise.indexes import PartialIndex, UniqueIndexABC
+from tortoise.indexes import PartialIndex
 from tortoise.models import Model
 
 
@@ -68,7 +68,7 @@ class PostgresUniqueIndex(PostgreSQLIndex):
     ):
         super().__init__(*expressions, fields=fields, name=name, condition=condition)
         if nulls_not_distinct:
-            self.extra += " nulls not distinct".upper()
+            self.extra = " nulls not distinct".upper() + self.extra
 
     def get_sql(self, schema_generator: BaseSchemaGenerator, model: type[Model], safe: bool):
         if self.INDEX_TYPE:
