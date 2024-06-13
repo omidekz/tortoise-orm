@@ -1,5 +1,4 @@
-import abc
-from typing import TYPE_CHECKING, Optional, Tuple, Generic, TypeVar
+from typing import TYPE_CHECKING, Optional, Tuple, Type
 
 
 from pypika.terms import Term, ValueWrapper
@@ -76,29 +75,3 @@ class PartialIndex(Index):
                 items.append(f"{k} = {ValueWrapper(v)}")
             cond += " AND ".join(items)
             self.extra = cond
-
-
-T = TypeVar("T")
-
-
-class UniqueIndexABC(Index, abc.ABC, Generic[T]):
-    """
-    T type is used for nulls type arg beyond extends
-    """
-
-    INDEX_TYPE = "unique"
-
-    def __init__(
-        self,
-        *expressions: Term,
-        fields: Optional[Tuple[str]] = None,
-        name: Optional[str] = None,
-        nulls: Optional[T] = None,
-    ):
-        super().__init__(*expressions, fields=fields, name=name)
-        if nulls is not None:
-            self.extra += f" {self.nulls(nulls)}"
-
-    @abc.abstractmethod
-    def nulls(self, distinct: T):
-        raise NotImplementedError(self, distinct, 'no handler found')
