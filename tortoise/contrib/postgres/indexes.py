@@ -1,8 +1,10 @@
-from typing import Optional, Tuple, Literal
+from typing import Optional, Tuple, Literal, Type
 
 from pypika.terms import Term, ValueWrapper
 
+from tortoise.backends.base.schema_generator import BaseSchemaGenerator
 from tortoise.indexes import PartialIndex, UniqueIndexABC
+from tortoise.models import Model
 
 
 class PostgreSQLIndex(PartialIndex):
@@ -51,10 +53,24 @@ class SpGistIndex(PostgreSQLIndex):
     INDEX_TYPE = "SPGIST"
 
 
-class PostgresUniqueIndex(UniqueIndexABC[Literal["distinct", "not distinct"]]):
-    @staticmethod
-    def _nulls(distinct_status: Literal["distinct", "not distinct"]):
-        return f"nulls {distinct_status}"
+class PostgresUniqueIndex(PostgreSQLIndex):
+    INDEX_CREATE_TEMPLATE = PostgreSQLIndex.INDEX_CREATE_TEMPLATE.replace(
+        "CREATE", "CREATE UNIQUE"
+    ).replace("USING", "")
 
-    def nulls(self, distinct_status: Literal["distinct", "not distinct"]):
-        return self._nulls(distinct_status)
+    def __init__(
+        self,
+        *expressions: Term,
+        fields: Optional[Tuple[str]] = None,
+        name: Optional[str] = None,
+        condition: Optional[dict] = None,
+        nulls_not_distinct: bool = False,
+    ):
+        super().__init__(*expressions, fields=fields, name=name, condition=condition)
+        if nulls_not_distinct:
+            self.extra += " nulls not distinct".upper()
+
+    def get_sql(self, schema_generator: BaseSchemaGenerator, model: type[Model], safe: bool):
+        if self.INDEX_TYPE:
+            self.INDEX_TYPE = f"USING {self.INDEX_TYPE}"
+        return super().get_sql(schema_generator, model, safe)
