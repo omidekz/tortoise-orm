@@ -1,19 +1,39 @@
-from typing import Sequence
-from tortoise.indexes import UniqueIndexABC
+from typing import Tuple, Optional, Dict
+
+from pypika.terms import Term, ValueWrapper
+from tortoise.indexes import PartialIndex
 
 
-class SqliteUniqueIndex(UniqueIndexABC[Sequence[str]]):
+class SqliteIndex(PartialIndex):
+    INDEX_CREATE_TEMPLATE = PartialIndex.INDEX_CREATE_TEMPLATE.replace("INDEX", "INDEX {exists} ")
 
-    @staticmethod
-    def get_conditions(fields: Sequence[str]):
-        conditions = tuple(
-            map(
-                lambda field_name: f"{field_name} is not null",
-                fields or [],
-            )
-        )
-        return " and ".join(conditions)
 
-    def nulls(self, null_fields: Sequence[str]):
-        result = self.get_conditions(null_fields)
-        return f"where {result}" if result else result
+class SqliteUniqueIndex(SqliteIndex):
+    INDEX_TYPE = "unique".upper()
+
+    def __init__(
+        self,
+        *expressions: Term,
+        fields: Optional[Tuple[str, ...]] = None,
+        name: Optional[str] = None,
+        condition: Optional[Dict[str, str]] = None,
+        where_expre: Optional[str] = None,
+    ):
+        _condition = condition
+        if condition:
+            condition = None
+        super().__init__(*expressions, fields=fields, name=name, condition=condition)
+        if _condition:
+            self.extra = where_expre or self._gen_condition(_condition)
+
+    @classmethod
+    def _gen_field_cond(cls, kv: tuple):
+        key, cond = kv
+        op = "" if isinstance(cond, str) and cond.strip().lower().startswith("is") else "="
+        if op == "=":
+            cond = ValueWrapper(cond)
+        return str(f"{key} {op} {cond}")
+
+    def _gen_condition(self, conditions: Dict[str, str]):
+        conditions = " AND ".join(tuple(map(self._gen_field_cond, conditions.items())))
+        return f" where {conditions}"
